@@ -1,0 +1,166 @@
+/**
+ * 1. DATOS SIMULADOS (Mock Data)
+ * Representan lo que después vendrá de tu base de datos en Laravel.
+ */
+const datosPorDefecto = {
+    vuelos: [
+        { id: "BO-101", ruta: "Santa Cruz - La Paz", estado: "A tiempo", hora: "08:00", avion: "Boeing 737" },
+        { id: "BO-205", ruta: "Cochabamba - Santa Cruz", estado: "Retrasado", hora: "09:15", avion: "Airbus A320" },
+        { id: "BO-312", ruta: "La Paz - Tarija", estado: "A tiempo", hora: "10:30", avion: "Boeing 737" },
+        { id: "BO-440", ruta: "Santa Cruz - Sucre", estado: "Cancelado", hora: "11:45", avion: "Bombardier CRJ200" },
+        { id: "BO-551", ruta: "Cobija - La Paz", estado: "En ruta", hora: "13:00", avion: "Boeing 737" },
+        { id: "IN-901", ruta: "Santa Cruz - Buenos Aires", estado: "A tiempo", hora: "14:20", avion: "Airbus A330" },
+        { id: "BO-602", ruta: "Oruro - Cochabamba", estado: "Retrasado", hora: "15:10", avion: "Airbus A320" },
+        { id: "BO-711", ruta: "Trinidad - Santa Cruz", estado: "A tiempo", hora: "16:40", avion: "Bombardier CRJ200" },
+        { id: "IN-902", ruta: "Santa Cruz - São Paulo", estado: "En ruta", hora: "18:00", avion: "Airbus A330" },
+        { id: "BO-820", ruta: "Uyuni - La Paz", estado: "A tiempo", hora: "19:30", avion: "Boeing 737" },
+        { id: "BO-905", ruta: "Santa Cruz - Miami", estado: "Retrasado", hora: "21:00", avion: "Boeing 767" },
+        { id: "BO-112", ruta: "Tarija - Cochabamba", estado: "A tiempo", hora: "22:15", avion: "Airbus A320" }
+    ],
+    flota: [
+        { matricula: "CP-2031", modelo: "Boeing 737", estado: "Activo", ult_mantenimiento: "2026-02-10" },
+        { matricula: "CP-1540", modelo: "Airbus A320", estado: "En Hangar", ult_mantenimiento: "2026-03-01" }
+    ],
+    reservas: [
+        { pasajero: "Ario Loras", vuelo: "BO-101", asiento: "12A", pago: "Completado" },
+        { pasajero: "Maria Gomez", vuelo: "BO-205", asiento: "05C", pago: "Pendiente" }
+    ]
+};
+
+// 2. Intentamos cargar desde localStorage. Si no hay nada, usamos los datos por defecto.
+let sistemaData = JSON.parse(localStorage.getItem('miSistemaAereo')) || datosPorDefecto;
+
+// 3. Función Pro para guardar los cambios en la memoria
+function actualizarMemoria() {
+    localStorage.setItem('miSistemaAereo', JSON.stringify(sistemaData));
+}
+
+/**
+ * 2. CONFIGURACIÓN DE TABLAS
+ * Define qué columnas mostrar para cada sección.
+ */
+const configTablas = {
+    vuelos: ["ID Vuelo", "Ruta", "Estado", "Hora", "Avión"],
+    flota: ["Matrícula", "Modelo", "Estado", "Últ. Mantenimiento"],
+    reservas: ["Pasajero", "Vuelo", "Asiento", "Estado Pago"]
+};
+
+/**
+ * 3. FUNCIONES DE RENDERIZADO
+ */
+
+// Función principal para cambiar de sección
+function showSection(seccion) {
+    seccionActual = seccion; // Actualizamos el estado
+    
+    const title = document.getElementById('page-title');
+    const tableHead = document.getElementById('table-head');
+
+    title.innerText = seccion.charAt(0).toUpperCase() + seccion.slice(1);
+    tableHead.innerHTML = "";
+
+    // Generar encabezados
+    configTablas[seccion].forEach(col => {
+        const th = document.createElement('th');
+        th.innerText = col;
+        tableHead.appendChild(th);
+    });
+    // Limpiar el buscador al cambiar de sección
+    document.getElementById('search-input').value = "";
+
+    // Llamamos a la nueva función que solo pinta las filas
+    renderTable(sistemaData[seccion]);
+}
+
+    // 3. NUEVA FUNCIÓN: Solo se encarga de pintar las filas (Tbody)
+function renderTable(datos) {
+    const tableBody = document.getElementById('table-body');
+    tableBody.innerHTML = ""; // Limpiamos antes de pintar
+
+    datos.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        
+        Object.values(item).forEach(val => {
+            const td = document.createElement('td');
+            if (val === "A tiempo" || val === "Activo") {
+                td.innerHTML = `<span class="status status-ontime">${val}</span>`;
+            } else if (val === "Retrasado" || val === "En Hangar" || val === "Pendiente") {
+                td.innerHTML = `<span class="status status-delayed">${val}</span>`;
+            } else if (val === "Cancelado") {
+                td.innerHTML = `<span class="status status-cancelled">${val}</span>`;
+            } else if (val === "En ruta") {
+                td.innerHTML = `<span class="status status-enroute">${val}</span>`;
+            } else {
+                td.innerText = val;
+            }
+            tr.appendChild(td);
+        });
+        // Columna de Acciones
+        const tdAcciones = document.createElement('td');
+        tdAcciones.innerHTML = `<button onclick="eliminarVuelo(${index})" style="background:red; color:white; border:none; padding:5px 10px; border-radius:3px;">Eliminar</button>`;
+        tr.appendChild(tdAcciones);
+
+        tableBody.appendChild(tr);
+    });
+}
+
+function eliminarVuelo(index) {
+    if (confirm("¿Estás seguro de eliminar este registro?")) {
+        // 1. Eliminamos del array global usando el índice
+        sistemaData[seccionActual].splice(index, 1);
+        actualizarMemoria(); // <-- ¡AQUÍ TAMBIÉN GUARDAMOS!
+        // 2. Refrescamos la vista
+        showSection(seccionActual);
+    }
+}
+
+// 4. EL BUSCADOR (Lógica Pro)
+document.getElementById('search-input').addEventListener('input', (event) => {
+    // a. Capturamos lo que el usuario escribe y lo pasamos a minúsculas
+    const terminoBusqueda = event.target.value.toLowerCase();
+
+    // b. Filtramos el array de la sección actual
+    const datosFiltrados = sistemaData[seccionActual].filter(item => {
+        // Convertimos todos los valores del objeto (Ej: ["BO-101", "La Paz", "A tiempo"]) 
+        // en un solo texto continuo ("bo-101 la paz a tiempo")
+        const textoFila = Object.values(item).join(" ").toLowerCase();
+        
+        // Verificamos si ese texto contiene lo que el usuario escribió
+        return textoFila.includes(terminoBusqueda);
+    });
+
+    // c. Volvemos a pintar la tabla SOLO con los datos que pasaron el filtro
+    renderTable(datosFiltrados);
+});
+
+// Inicializar la página con la vista de vuelos
+document.addEventListener('DOMContentLoaded', () => {
+    showSection('vuelos');
+});
+
+// Abrir y cerrar modal
+function abrirModal() { document.getElementById('modal-nuevo').style.display = 'flex'; }
+function cerrarModal() { document.getElementById('modal-nuevo').style.display = 'none'; }
+
+// Lógica de guardar
+document.getElementById('form-nuevo-vuelo').addEventListener('submit', (e) => {
+    e.preventDefault(); // Evita que la página se recargue
+
+    const nuevoVuelo = {
+        id: document.getElementById('id-vuelo').value,
+        ruta: document.getElementById('ruta-vuelo').value,
+        estado: document.getElementById('estado-vuelo').value,
+        hora: document.getElementById('hora-vuelo').value,
+        avion: document.getElementById('avion-vuelo').value
+    };
+
+    // 1. Lo agregamos a nuestro array de datos (en memoria)
+    sistemaData.vuelos.push(nuevoVuelo);
+    actualizarMemoria(); // <-- ¡AQUÍ GUARDAMOS!
+    // 2. Refrescamos la tabla
+    showSection('vuelos');
+    
+    // 3. Limpiamos y cerramos
+    document.getElementById('form-nuevo-vuelo').reset();
+    cerrarModal();
+});
