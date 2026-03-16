@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Logística Aérea</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <h2>PLAN DE VIAJE</h2>
+            <nav>
+                <ul>
+                    <li><a href="#" onclick="showSection('vuelos')">Control de Vuelos</a></li>
+                    <li><a href="#" onclick="showSection('flota')">Monitoreo de Flota</a></li>
+                    <li><a href="#" onclick="showSection('reservas')">Reservas</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header>
+                <h1 id="page-title">Control de Vuelos</h1>
+            </header>
+
+            <div class="toolbar">
+                <input type="text" id="search-input" placeholder="Buscar en esta sección... (Ej: La Paz, Retrasado)">
+                <button type="button" id="btn-nuevo"onclick="abrirModal()">+ Nuevo Vuelo</button>
+            </div>
+
+            <section id="main-view">
+                <table id="data-table">
+                    <thead>
+                        <tr id="table-head">
+                            </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <div id="modal-nuevo" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3>Registrar Nuevo Vuelo</h3>
+        <form id="form-nuevo-vuelo">
+            <input type="text" id="id-vuelo" placeholder="ID Vuelo (ej: BO-999)" required>
+            <input type="text" id="ruta-vuelo" placeholder="Ruta (ej: Santa Cruz - Madrid)" required>
+            <input type="text" id="estado-vuelo" placeholder="Estado" required>
+            <input type="time" id="hora-vuelo" required>
+            <input type="text" id="avion-vuelo" placeholder="Modelo de Avión" required>
+            <div class="modal-buttons">
+                <button type="button" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit">Guardar Registro</button>
+            </div>
+        </form>
+    </div>
+</div>
+    <script src="app.js"></script>
+</body>
+</html>
